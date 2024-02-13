@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to ASCII art converter</title>
+    <style>
+        html {
+            background: #202020;
+            color: #fff;
+        }
+        .container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #imagePreview, #monochrome {
+            display:none;
+            min-width: 20vw;
+            max-width: 600px;
+            max-height: 600px;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <input type="file" id="uploadButton" accept="image/*"><br>
+        <img id="imagePreview" src="" />
+        <canvas id="monochrome"></canvas>
+    </div>
+<script>
+</script>
+</body>
+</html>
