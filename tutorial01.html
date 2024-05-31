@@ -8,6 +8,7 @@
         html {
             background: #202020;
             color: #fff;
+            transition: background-color 1s ease;
         }
         .container {
             text-align: center;
@@ -19,16 +20,62 @@
             max-width: 600px;
             max-height: 600px;
             margin: 10px auto;
+            image-rendering: pixelated;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <input type="file" id="uploadButton" accept="image/*"><br>
-        <img id="imagePreview" src="" />
-        <canvas id="monochrome"></canvas>
-    </div>
+<div class="container">
+    <input type="file" id="uploadButton" accept="image/*"><br>
+    <img id="imagePreview" src="" />
+    <canvas id="monochrome"></canvas>
+</div>
 <script>
+  const getAverageColor = (data, stepPixel = 2) => {
+    let r = 0, g = 0, b = 0
+    const length = data.length
+    const step = stepPixel * 4 // RGBA - 4byte
+
+    for (let i = 0; i < length; i += step) {
+      r += data[i]
+      g += data[i + 1]
+      b += data[i + 2]
+    }
+
+    let count = length / step
+    r = Math.floor(r / count)
+    g = Math.floor(g / count)
+    b = Math.floor(b / count)
+
+    return `rgb(${r}, ${g}, ${b})`
+  }
+
+  document.getElementById('uploadButton').addEventListener('change', function () {
+    const file = this.files[0]
+    if (!file) return
+
+    const img = new Image()
+    img.src = URL.createObjectURL(file)
+    img.onload = () => {
+      const imgPreview = document.getElementById('imagePreview')
+      imgPreview.style.display = 'block'
+      imgPreview.src = img.src
+
+      URL.revokeObjectURL(img.src)
+
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      canvas.width = img.width
+      canvas.height = img.height
+      ctx.drawImage(img, 0, 0)
+
+      const imageData = ctx.getImageData(0, 0, img.width, img.height)
+      console.log(imageData.data)
+
+      const color = getAverageColor(imageData.data, 1)
+      document.documentElement.style.backgroundColor = color
+    }
+  })
 </script>
 </body>
 </html>
