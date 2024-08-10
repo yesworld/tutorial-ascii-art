@@ -7,6 +7,7 @@
 ## Список уроков на ютубе
 - Часть 1: Создаем примитивный Ascii art из загружаемого рисунка на JS/HTML.<br>
   :tv: [YouTube](https://youtu.be/EZ8h0VKDyds)
+  :tv: [RuTube](https://rutube.ru/video/2ccd748afb31ca3a03d345303f7163aa)
   
 - Часть 2: _В планах, если будет интерес у людей..._
 
