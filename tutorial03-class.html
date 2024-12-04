@@ -40,109 +40,125 @@
   <pre id="ascii"></pre>
 </div>
 <script>
-  const displayMonochromePreview = (imageData) => {
-    const width = imageData.width
-    const height = imageData.height
+  const ASCII = '@%#*+=-:. '
 
-    const canvas = document.getElementById('monochrome')
-    canvas.style.display = 'block'
-    canvas.width = width
-    canvas.height = height
+  const reverse = (str) => str.split('').reverse().join('')
 
-    const ctx = canvas.getContext('2d')
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const r = imageData.data[i]
-      const g = imageData.data[i + 1]
-      const b = imageData.data[i + 2]
+  class AsciiArtConvertor {
+    constructor(uploadButton, scaleImage, monochrome, ascii, img, chars) {
+      this.uploadButton = uploadButton
+      this.scaleImage = scaleImage
+      this.monochrome = monochrome
+      this.ascii = ascii
+      this.img = img
+      this.chars = chars
 
-      const avgBrightness = (r + g + b) / 3
-      ctx.fillStyle = `rgb(${avgBrightness}, ${avgBrightness}, ${avgBrightness})`
-
-      const x = (i / 4) % width
-      const y = Math.floor((i / 4) / width)
-
-      ctx.fillRect(x, y, 1, 1)
+      this.uploadButton.addEventListener('change', this.handleFileUpload.bind(this))
+      this.scaleImage.addEventListener('input', this.handleScaleChange.bind(this))
     }
 
-    return ctx.getImageData(0, 0, width, height)
-  }
+    handleFileUpload(event) {
+      const file = event.target.files[0]
+      if (!file) return
 
-  const createAsciiArt = (imageData) => {
-    const width = imageData.width
+      this.img.src = URL.createObjectURL(file)
+      this.img.onload = () => this.scaleImage.dispatchEvent(new Event('input'))
+    }
 
-    let asciiArt = ''
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const avgBrightness = imageData.data[i]
-      asciiArt += getAsciiChar(avgBrightness)
+    handleScaleChange(event) {
+      const scale = event.target.value / 100 // 0 до 1
 
-      if ((i / 4 + 1) % width === 0) {
-        asciiArt += '\n'
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const width = Math.floor(this.img.width * scale)
+      const height = Math.floor(this.img.height * scale)
+
+      canvas.width = width
+      canvas.height = height
+      ctx.drawImage(this.img, 0, 0, width, height)
+
+      const imageData = ctx.getImageData(0, 0, width, height)
+
+      const color = this.getAverageColor(imageData.data, 1)
+      document.documentElement.style.backgroundColor = color
+
+      const imageData2 = this.displayMonochromePreview(imageData)
+      this.createAsciiArt(imageData2)
+    }
+
+    getAverageColor(data) {
+      let r = 0, g = 0, b = 0
+      const length = data.length
+
+      for (let i = 0; i < length; i += 4) {
+        r += data[i]
+        g += data[i + 1]
+        b += data[i + 2]
       }
+
+      let count = length / 4
+      r = Math.floor(r / count)
+      g = Math.floor(g / count)
+      b = Math.floor(b / count)
+
+      return `rgb(${r}, ${g}, ${b})`
+    }
+    displayMonochromePreview(imageData) {
+      const { width, height } = imageData
+
+      this.monochrome.style.display = 'block'
+      this.monochrome.width = width
+      this.monochrome.height = height
+
+      const ctx = this.monochrome.getContext('2d')
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        const r = imageData.data[i]
+        const g = imageData.data[i + 1]
+        const b = imageData.data[i + 2]
+
+        const avgBrightness = (r + g + b) / 3
+        ctx.fillStyle = `rgb(${avgBrightness}, ${avgBrightness}, ${avgBrightness})`
+
+        const x = (i / 4) % width
+        const y = Math.floor((i / 4) / width)
+
+        ctx.fillRect(x, y, 1, 1)
+      }
+
+      return ctx.getImageData(0, 0, width, height)
     }
 
-    document.getElementById('ascii').textContent = asciiArt
-  }
+    createAsciiArt(imageData) {
+      const { width } = imageData
 
-  const reverse = (str) => {
-    return str.split('').reverse().join('')
-  }
+      let asciiArt = ''
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        const avgBrightness = imageData.data[i]
+        asciiArt += this.getAsciiChar(avgBrightness)
 
-  const getAsciiChar = (avgBrightness) => {
-    const chars = reverse('@%#*+=-:. ')
+        if ((i / 4 + 1) % width === 0) {
+          asciiArt += '\n'
+        }
+      }
 
-    const index = Math.round((avgBrightness / 255) * (chars.length - 1))
-
-    return chars[index]
-  }
-
-  const getAverageColor = (data, stepPixel = 2) => {
-    let r = 0, g = 0, b = 0
-    const length = data.length
-    const step = stepPixel * 4 // RGBA - 4byte
-
-    for (let i = 0; i < length; i += step) {
-      r += data[i]
-      g += data[i + 1]
-      b += data[i + 2]
+      this.ascii.textContent = asciiArt
     }
 
-    let count = length / step
-    r = Math.floor(r / count)
-    g = Math.floor(g / count)
-    b = Math.floor(b / count)
+    getAsciiChar(avgBrightness) {
+      const index = Math.round((avgBrightness / 255) * (this.chars.length - 1))
 
-    return `rgb(${r}, ${g}, ${b})`
+      return this.chars[index]
+    }
   }
 
-  const img = new Image()
-  document.getElementById('scaleImage').addEventListener('input', (event) => {
-    const scale = event.target.value / 100 // 0 до 1
-
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    const width = Math.floor(img.width * scale)
-    const height = Math.floor(img.height * scale)
-
-    canvas.width = width
-    canvas.height = height
-    ctx.drawImage(img, 0, 0, width, height)
-
-    const imageData = ctx.getImageData(0, 0, width, height)
-
-    const color = getAverageColor(imageData.data, 1)
-    document.documentElement.style.backgroundColor = color
-
-    const imageData2 = displayMonochromePreview(imageData)
-    createAsciiArt(imageData2)
-  })
-
-  document.getElementById('uploadButton').addEventListener('change', (event) => {
-    const file = event.target.files[0]
-    if (!file) return
-
-    img.src = URL.createObjectURL(file)
-    img.onload = () => document.getElementById('scaleImage').dispatchEvent(new Event('input'))
-  })
+  new AsciiArtConvertor(
+    document.getElementById('uploadButton'),
+    document.getElementById('scaleImage'),
+    document.getElementById('monochrome'),
+    document.getElementById('ascii'),
+    new Image(),
+    reverse(ASCII),
+  )
 </script>
 </body>
 </html>
